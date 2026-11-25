@@ -27,13 +27,6 @@ export const OPEN_LOCAL_FOLDER_LABEL = "Open local folder";
 /** Operator label: deletes local ASA folders only; Start downloads again (#702). */
 export const CLEAR_DOWNLOADED_FILES_LABEL = "Clear downloaded files";
 
-/** Tooltip / disabled title for Clear downloaded files (#702). */
-export function clearDownloadedFilesHint(input: { hasLocalFiles: boolean; serverActive: boolean }): string {
-  if (!input.hasLocalFiles) return NO_LOCAL_MOD_FILES_YET;
-  if (input.serverActive) return STOP_SERVER_BEFORE_DELETE_MOD_FILES;
-  return CLEAR_DOWNLOADED_FILES_LABEL;
-}
-
 /** Disabled-only title (omit when the action is available). */
 export function clearDownloadedFilesDisabledTitle(input: {
   hasLocalFiles: boolean;

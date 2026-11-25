@@ -152,16 +152,33 @@ export function ServerModsTable(props: Props): ReactElement {
         dragColumn: props.mode === "server",
         serverActive: props.serverActive,
         hasLocalFiles: (projectId) => props.localFilesById?.[projectId] === true,
+        loadOrderIds,
         onInspect: (row) => handlersRef.current.onInspect(row),
         onAdd: (row) => handlersRef.current.onAdd(row),
         onToggle: (id, enabled) => handlersRef.current.onToggle(id, enabled),
         onRemove: (id) => handlersRef.current.onRemove(id),
         onOpenExternal: (url) => handlersRef.current.onOpenExternal(url),
         onSetPassive: (row) => handlersRef.current.onSetPassive?.(row),
+        onCopyProjectId: (row) => handlersRef.current.onCopyProjectId?.(row),
+        onCopyCurseForgeUrl: (row) => handlersRef.current.onCopyCurseForgeUrl?.(row),
         onOpenLocalFolder: (row) => handlersRef.current.onOpenLocalFolder?.(row),
         onClearDownloadedFiles: (row) => handlersRef.current.onClearDownloadedFiles?.(row),
+        onMoveLoadOrder:
+          props.onReorder !== undefined
+            ? (row, move) => {
+                persistLoadOrderMove(row, move);
+              }
+            : undefined,
       }),
-    [props.mode, props.busyKey, props.serverActive, props.localFilesById],
+    [
+      props.mode,
+      props.busyKey,
+      props.serverActive,
+      props.localFilesById,
+      props.onReorder,
+      loadOrderIds,
+      persistLoadOrderMove,
+    ],
   );
 
   const handleDragEnd = useCallback(

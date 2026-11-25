@@ -116,10 +116,12 @@ Workspace → **Mods** has two views (`SegmentedControl`):
    refreshes after Stop and after Clear. The Project ID stays on the list (#702).
 9. Column sort is **view-only** — clear sort before drag-reorder (drag disabled
    while sorted, filtered, or while any row mutation / reorder persist is busy).
-   Without drag: row context **Move to top / up / down / bottom**, **Alt+↑/↓**
-   on a focused row, and **Apply sort as load order** (writes the current column
-   order into `mods` in one patch, then returns to load-order view; disabled
-   while a filter is active) (#638).
+   Without drag: row **More actions** kebab and context menu offer **Move to top /
+   up / down / bottom**, **Alt+↑/↓** on a focused row moves load order, and
+   **Apply sort as load order** writes the current column order into `mods` in
+   one patch then returns to load-order view (disabled while a filter is active).
+   The actions column keeps View details and Remove (or Add on Discover); Copy,
+   CurseForge, local folder, and Clear files live in the kebab (#638).
 10. Detail drawer / Open on CurseForge uses cached metadata or
     `mods:get-by-reference`; external open is fail-closed to a validated ASA
     CurseForge mod URL (`mods:open-curseforge`). Configured mods can also be

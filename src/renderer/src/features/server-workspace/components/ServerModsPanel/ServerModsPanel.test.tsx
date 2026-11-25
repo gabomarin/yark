@@ -700,11 +700,8 @@ describe("ServerModsPanel", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    await user.click(
-      await screen.findByRole("button", {
-        name: "Open CurseForge Awesome Spyglass!",
-      }),
-    );
+    await user.click(await screen.findByRole("button", { name: "More actions Awesome Spyglass!" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Open CurseForge" }));
     expect(api.openCurseForgeMod).toHaveBeenCalledWith(awesomeDetail.curseforgeUrl);
   });
 

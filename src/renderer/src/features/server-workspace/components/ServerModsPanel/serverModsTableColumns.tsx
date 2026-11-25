@@ -5,7 +5,7 @@ import type { DataTableColumn } from "mantine-datatable";
 import { AppSwitch } from "@ui/AppSwitch/AppSwitch";
 import { ModIdentityCell } from "./ModIdentityCell";
 import { ServerModsActionsCell } from "./ServerModsActionsCell";
-import type { ModRow } from "./serverModsModel";
+import type { ModLoadOrderMove, ModRow } from "./serverModsModel";
 import { isModsListBusy } from "./serverModsBusy";
 import classes from "./ServerModsPanel.module.css";
 
@@ -33,6 +33,10 @@ export function buildServerModsTableColumns(input: {
   onSetPassive?: (row: ModRow) => void;
   onOpenLocalFolder?: (row: ModRow) => void;
   onClearDownloadedFiles?: (row: ModRow) => void;
+  onCopyProjectId?: (row: ModRow) => void;
+  onCopyCurseForgeUrl?: (row: ModRow) => void;
+  loadOrderIds?: readonly string[];
+  onMoveLoadOrder?: (row: ModRow, move: ModLoadOrderMove) => void;
   hasLocalFiles?: (projectId: string) => boolean;
   serverActive?: boolean;
 }): DataTableColumn<ModRow>[] {
@@ -154,7 +158,8 @@ export function buildServerModsTableColumns(input: {
     {
       accessor: "actions",
       title: "",
-      width: input.mode === "server" ? 168 : 112,
+      // View + kebab + Add/Remove — less-used actions live in More actions (#638).
+      width: input.mode === "server" ? 96 : 96,
       textAlign: "right",
       cellsClassName: classes.actionsCell,
       render: (row): ReactElement => (
@@ -165,12 +170,17 @@ export function buildServerModsTableColumns(input: {
             busy={isModRowBusy(input.busyKey, row)}
             serverActive={input.serverActive}
             hasLocalFiles={row.id !== null ? input.hasLocalFiles?.(row.id) : false}
+            loadOrderIds={input.loadOrderIds}
             onInspect={input.onInspect}
             onAdd={input.onAdd}
             onRemove={input.onRemove}
             onOpenExternal={input.onOpenExternal}
+            onSetPassive={input.onSetPassive}
+            onCopyProjectId={input.onCopyProjectId}
+            onCopyCurseForgeUrl={input.onCopyCurseForgeUrl}
             onOpenLocalFolder={input.onOpenLocalFolder}
             onClearDownloadedFiles={input.onClearDownloadedFiles}
+            onMoveLoadOrder={input.onMoveLoadOrder}
           />
         </div>
       ),
