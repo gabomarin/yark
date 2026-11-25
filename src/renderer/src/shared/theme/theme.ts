@@ -444,6 +444,9 @@ function createAppTheme(
      * `undefined` explicitly would overwrite Mantine's default and crash components.
      */
     ...(isBreeze ? { variantColorResolver: plasmaBreezeVariantColorsResolver } : {}),
+    // Mantine 9.8+: UnstyledButton uses --mantine-cursor-type (default arrow).
+    // 9.5 hardcoded pointer; keep hand cursor on Button / ActionIcon / Checkbox.
+    cursorType: "pointer",
     primaryColor: "blue",
     primaryShade: 5,
     /** Dark text on light filled colors (fossil Restart, attention); white on red/teal filled. */

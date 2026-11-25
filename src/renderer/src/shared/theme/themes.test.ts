@@ -426,4 +426,8 @@ describe("theme registry (#PUX-004 Track B, #PUX-005-B)", () => {
     expect(compact.spacing?.md).not.toBe(comfortable.spacing?.md);
     expect(compact.defaultRadius).toBe(comfortable.defaultRadius);
   });
+
+  it("keeps pointer cursor on interactive Mantine controls (9.8 UnstyledButton)", () => {
+    expect(createAppThemeForAppearance(DEFAULT_APP_THEME, "compact").cursorType).toBe("pointer");
+  });
 });
