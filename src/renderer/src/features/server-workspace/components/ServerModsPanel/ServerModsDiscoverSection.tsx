@@ -145,9 +145,7 @@ export function ServerModsDiscoverSection(props: Props): ReactElement {
   const totalCount = catalog?.pagination.totalCount ?? 0;
   const pageCount = Math.max(1, Math.ceil(totalCount / DISCOVER_PAGE_SIZE));
   const showPagination = hasLoadedOnce && totalCount > DISCOVER_PAGE_SIZE;
-  const hiddenConfiguredCount = hideAlreadyAdded
-    ? catalogRows.length - rows.length
-    : 0;
+  const hiddenConfiguredCount = hideAlreadyAdded ? catalogRows.length - rows.length : 0;
 
   return (
     <div className={classes.sectionLayout}>
@@ -174,9 +172,7 @@ export function ServerModsDiscoverSection(props: Props): ReactElement {
           <Text size="sm" c="dimmed">
             {totalCount.toLocaleString()} mods
             {committedQuery.length > 0 ? ` matching “${committedQuery}”` : ""}
-            {hiddenConfiguredCount > 0
-              ? ` · ${hiddenConfiguredCount} already added hidden on this page`
-              : ""}
+            {hiddenConfiguredCount > 0 ? ` · ${hiddenConfiguredCount} already added hidden on this page` : ""}
           </Text>
         ) : null}
       </div>

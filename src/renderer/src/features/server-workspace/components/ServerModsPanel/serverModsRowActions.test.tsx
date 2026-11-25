@@ -134,5 +134,4 @@ describe("buildServerModsRowActions (#702)", () => {
     expect(items.find((item) => item.key === "move-up")?.disabled).toBe(true);
     expect(items.find((item) => item.key === "move-down")?.disabled).toBe(false);
   });
-
 });
