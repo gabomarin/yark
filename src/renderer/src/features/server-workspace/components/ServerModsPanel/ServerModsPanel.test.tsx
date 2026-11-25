@@ -906,6 +906,43 @@ describe("ServerModsPanel", () => {
     expect(screen.getByRole("button", { name: "Remove all disabled" })).toBeDisabled();
   });
 
+  it("applies column sort as load order in one patch (#638)", async () => {
+    const api = installApi();
+    const user = userEvent.setup();
+    render(
+      <AppProviders>
+        <ServerModsPanel
+          server={{
+            ...server,
+            mods: ["947033", "962796"],
+            disabledMods: [],
+            modMetadataCache: { "947033": awesomeDetail, "962796": mapModDetail },
+          }}
+          onServerUpdated={vi.fn()}
+        />
+      </AppProviders>,
+    );
+
+    expect(await screen.findByText("Awesome Spyglass!")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Apply sort as load order" })).not.toBeInTheDocument();
+
+    // Downloads asc puts the lower-count Maps mod first — different from profile load order.
+    await user.click(screen.getByRole("button", { name: /Downloads/i }));
+    expect(await screen.findByRole("button", { name: "Apply sort as load order" })).toBeEnabled();
+
+    await user.click(screen.getByRole("button", { name: "Apply sort as load order" }));
+    await waitFor(() => {
+      expect(api.updateServerPatch).toHaveBeenCalledWith(
+        "server-1",
+        expect.objectContaining({
+          group: "mods",
+          mods: ["962796", "947033"],
+        }),
+      );
+    });
+    expect(screen.queryByRole("button", { name: "Apply sort as load order" })).not.toBeInTheDocument();
+  });
+
   it("filters the inventory by name without changing header counts (#636)", async () => {
     installApi();
     const user = userEvent.setup();

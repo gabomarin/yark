@@ -255,6 +255,14 @@ async function run() {
     await page.getByRole("button", { name: "Enable all", exact: true }).waitFor({ state: "visible", timeout: 5000 });
     console.log("E2E_MODS_SELECTION_BULK_OK");
 
+    // Load-order moves without drag (#638): context menu exposes Move actions.
+    const modRow = page.locator("[data-mod-row]").first();
+    await modRow.click({ button: "right" });
+    await page.getByRole("menuitem", { name: "Move to top", exact: true }).waitFor({ state: "visible", timeout: 5000 });
+    await page.getByRole("menuitem", { name: "Move up", exact: true }).waitFor({ state: "visible", timeout: 5000 });
+    await page.keyboard.press("Escape");
+    console.log("E2E_MODS_REORDER_MENU_OK");
+
     // Header quick actions (#637): one patch each, from the current switch state.
     const hasDisabledMod = (await page.getByRole("switch", { name: /^Enable /i }).count()) > 0;
     if (hasDisabledMod) {

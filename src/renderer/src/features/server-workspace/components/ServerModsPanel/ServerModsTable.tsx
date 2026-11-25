@@ -1,8 +1,8 @@
 import type { MouseEvent as ReactMouseEvent, ReactElement, ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Center, TableTd, Tooltip } from "@mantine/core";
-import { DragDropContext, Draggable, Droppable, type DropResult } from "@hello-pangea/dnd";
-import { ArrowCounterClockwise, DotsSixVertical } from "@phosphor-icons/react";
+import { Center, TableTd, Tooltip } from "@mantine/core";
+import { DragDropContext, Draggable, type DropResult } from "@hello-pangea/dnd";
+import { DotsSixVertical } from "@phosphor-icons/react";
 import type { DataTableSortStatus } from "mantine-datatable";
 import { DataTableDraggableRow } from "mantine-datatable";
 import { useRowActionMenuApi } from "@ui/RowActionMenu/RowActionMenuProvider";
@@ -10,31 +10,15 @@ import { YarkDataTable } from "@ui/YarkDataTable/YarkDataTable";
 import { confirmRemoveServerMod } from "./confirmRemoveServerMod";
 import { buildServerModsTableColumns, isModRowBusy } from "./serverModsTableColumns";
 import { buildServerModsRowActions } from "./serverModsRowActions";
+import { dragReorderTooltip, LOAD_ORDER_SORT, ServerModsTableWrapper } from "./serverModsTableDrag";
+import { ServerModsViewSortBar } from "./ServerModsViewSortBar";
+import { useServerModsTableLoadOrder } from "./useServerModsTableLoadOrder";
 import { sortModRows, type ModRow, type ModRowSortAccessor, type ModRowSortStatus } from "./serverModsModel";
 import classes from "./ServerModsPanel.module.css";
 
+export { LOAD_ORDER_SORT };
+
 const CONTEXT_SOURCE_ID = "server-mods-table";
-
-// mantine-datatable renders tableWrapper as a component type. Keep it stable so
-// controlled row updates do not remount the table DOM and cancel transitions.
-function ServerModsTableWrapper({ children }: { children: ReactNode }): ReactElement {
-  return (
-    <Droppable droppableId="server-mods">
-      {(provided) => (
-        <div {...provided.droppableProps} ref={provided.innerRef}>
-          {children}
-          {provided.placeholder}
-        </div>
-      )}
-    </Droppable>
-  );
-}
-
-/** Sentinel: not a sortable column — means canonical load-order / default catalog view. */
-export const LOAD_ORDER_SORT: DataTableSortStatus<ModRow> = {
-  columnAccessor: "loadIndex",
-  direction: "asc",
-};
 
 interface Props {
   rows: ModRow[];
@@ -49,6 +33,11 @@ interface Props {
   onSetPassive?: (row: ModRow) => void;
   /** Persist load-order change (server mode only). */
   onReorder?: (orderedIds: string[]) => void;
+  /**
+   * Full profile `mods` order (not the filtered view). Powers Move actions,
+   * Alt+↑/↓, and Apply sort as load order (#638).
+   */
+  loadOrderIds?: readonly string[];
   /** Server inventory search/status filter active — drag would corrupt load order (#636). */
   filterActive?: boolean;
   /** Empty body when search/status filter hides every row (keep headers). */
@@ -87,17 +76,10 @@ function toSortStatus(status: DataTableSortStatus<ModRow>): ModRowSortStatus | n
   };
 }
 
-function dragReorderTooltip(input: { dragEnabled: boolean; filterActive: boolean; viewSorted: boolean }): string {
-  if (input.dragEnabled) return "Drag to change load order";
-  if (input.filterActive) return "Clear filter to reorder";
-  if (input.viewSorted) return "Clear column sort to reorder";
-  return "Reorder unavailable while busy";
-}
-
 /**
  * Mods inventory as YarkDataTable (#94): thumbs, actions, column sort.
- * Server: view-sort vs load-order drag. Discover: column sort drives CurseForge
- * catalog order (remoteSorted); Clear sort restores Popularity.
+ * Server: view-sort vs load-order drag + Move / Alt+↑↓ / Apply sort (#638).
+ * Discover: column sort drives CurseForge catalog order (remoteSorted).
  */
 export function ServerModsTable(props: Props): ReactElement {
   const { openAt } = useRowActionMenuApi();
@@ -118,6 +100,18 @@ export function ServerModsTable(props: Props): ReactElement {
     if (props.remoteSorted) return props.rows;
     return sortModRows(props.rows, toSortStatus(sortStatus));
   }, [props.remoteSorted, props.rows, sortStatus]);
+
+  const loadOrderIds = useMemo(() => props.loadOrderIds ?? [], [props.loadOrderIds]);
+  const tableRootRef = useRef<HTMLDivElement | null>(null);
+  const { persistLoadOrderMove, onTableKeyDown } = useServerModsTableLoadOrder({
+    mode: props.mode,
+    busyKey: props.busyKey,
+    loadOrderIds,
+    records,
+    onReorder: props.onReorder,
+    tableRootRef,
+    rowsDependency: props.rows,
+  });
 
   // Stable handler identities so column defs (and cell Menus) are not rebuilt on
   // every parent render from App status pushes.
@@ -190,8 +184,10 @@ export function ServerModsTable(props: Props): ReactElement {
       "data-mod-key": row.key,
       "data-mod-enabled": row.enabled ? "true" : "false",
       "data-mod-passive": row.passive ? "true" : "false",
+      // Focusable so Alt+↑/↓ can move load order without a pointer (#638).
+      tabIndex: props.mode === "server" && props.onReorder !== undefined ? 0 : undefined,
     }),
-    [],
+    [props.mode, props.onReorder],
   );
 
   const rowClassName = useCallback(
@@ -228,13 +224,38 @@ export function ServerModsTable(props: Props): ReactElement {
         onCopyCurseForgeUrl: (row) => handlersRef.current.onCopyCurseForgeUrl?.(row),
         onOpenLocalFolder: (row) => handlersRef.current.onOpenLocalFolder?.(row),
         onClearDownloadedFiles: (row) => handlersRef.current.onClearDownloadedFiles?.(row),
+        loadOrderIds,
+        onMoveLoadOrder:
+          props.onReorder !== undefined
+            ? (row, move) => {
+                persistLoadOrderMove(row, move);
+              }
+            : undefined,
       });
       event.preventDefault();
       event.stopPropagation();
       openAt(CONTEXT_SOURCE_ID, entries, event.clientX, event.clientY);
     },
-    [openAt, props.busyKey, props.mode, props.serverActive, props.localFilesById],
+    [
+      openAt,
+      props.busyKey,
+      props.mode,
+      props.serverActive,
+      props.localFilesById,
+      props.onReorder,
+      loadOrderIds,
+      persistLoadOrderMove,
+    ],
   );
+
+  const applySortAsLoadOrder = useCallback(() => {
+    if (!viewSorted || filterActive || props.busyKey !== null || props.onReorder === undefined) return;
+    // Full visible table order when unfiltered — records are the whole inventory sorted.
+    const orderedIds = records.map((row) => row.id).filter((id): id is string => id !== null);
+    if (orderedIds.length !== loadOrderIds.length) return;
+    handlersRef.current.onReorder?.(orderedIds);
+    setSortStatus(LOAD_ORDER_SORT);
+  }, [viewSorted, filterActive, props.busyKey, props.onReorder, records, loadOrderIds, setSortStatus]);
 
   const table = (
     <YarkDataTable
@@ -314,17 +335,19 @@ export function ServerModsTable(props: Props): ReactElement {
   );
 
   return (
-    <div className={classes.tableStack}>
+    <div className={classes.tableStack} ref={tableRootRef} onKeyDown={onTableKeyDown}>
       {viewSorted ? (
-        <div className={classes.viewSortBar}>
-          <Button
-            variant="default"
-            leftSection={<ArrowCounterClockwise size={14} />}
-            onClick={() => setSortStatus(LOAD_ORDER_SORT)}
-          >
-            Clear sort
-          </Button>
-        </div>
+        <ServerModsViewSortBar
+          showApplySortAsLoadOrder={props.mode === "server" && props.onReorder !== undefined}
+          applyDisabled={filterActive || props.busyKey !== null}
+          applyDisabledReason={
+            filterActive
+              ? "Clear filter before applying sort as load order"
+              : "Write the current column order into the server load order"
+          }
+          onClearSort={() => setSortStatus(LOAD_ORDER_SORT)}
+          onApplySortAsLoadOrder={applySortAsLoadOrder}
+        />
       ) : null}
       <div className={classes.tableViewport}>
         {useDnD ? <DragDropContext onDragEnd={handleDragEnd}>{table}</DragDropContext> : table}

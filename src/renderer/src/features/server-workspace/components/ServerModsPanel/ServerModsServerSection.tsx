@@ -45,6 +45,10 @@ export function ServerModsServerSection(props: Props): ReactElement {
   const [inventoryFilter, setInventoryFilter] = useState<ServerModsInventoryFilter>(EMPTY_SERVER_MODS_INVENTORY_FILTER);
   const filterActive = isServerModsInventoryFilterActive(inventoryFilter);
   const visibleRows = useMemo(() => filterServerModRows(props.rows, inventoryFilter), [props.rows, inventoryFilter]);
+  const loadOrderIds = useMemo(
+    () => props.rows.map((row) => row.id).filter((id): id is string => id !== null),
+    [props.rows],
+  );
   const selectedIdSet = useMemo(() => new Set(props.selectedIds), [props.selectedIds]);
   const selectedRecords = useMemo(
     () => visibleRows.filter((row) => row.id !== null && selectedIdSet.has(row.id)),
@@ -100,6 +104,7 @@ export function ServerModsServerSection(props: Props): ReactElement {
             rows={visibleRows}
             mode="server"
             busyKey={props.busyKey}
+            loadOrderIds={loadOrderIds}
             filterActive={filterActive}
             filterEmptyState={
               filterActive ? (

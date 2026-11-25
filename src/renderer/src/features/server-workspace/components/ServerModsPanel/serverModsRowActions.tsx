@@ -1,6 +1,19 @@
-import { ArrowSquareOut, Broom, Copy, FolderOpen, MagnifyingGlass, Moon, Plus, Trash } from "@phosphor-icons/react";
+import {
+  ArrowDown,
+  ArrowLineDown,
+  ArrowLineUp,
+  ArrowSquareOut,
+  ArrowUp,
+  Broom,
+  Copy,
+  FolderOpen,
+  MagnifyingGlass,
+  Moon,
+  Plus,
+  Trash,
+} from "@phosphor-icons/react";
 import type { RowActionEntry } from "@ui/RowActionMenu/rowActionModel";
-import type { ModRow } from "./serverModsModel";
+import { canMoveModIdInLoadOrder, type ModLoadOrderMove, type ModRow } from "./serverModsModel";
 
 const ICON = 16;
 
@@ -49,6 +62,9 @@ export interface ServerModsRowActionInput {
   onCopyCurseForgeUrl?: (row: ModRow) => void;
   onOpenLocalFolder?: (row: ModRow) => void;
   onClearDownloadedFiles?: (row: ModRow) => void;
+  /** Full profile load order — enables Move actions (#638). */
+  loadOrderIds?: readonly string[];
+  onMoveLoadOrder?: (row: ModRow, move: ModLoadOrderMove) => void;
 }
 
 export function buildServerModsRowActions(input: ServerModsRowActionInput): RowActionEntry[] {
@@ -112,6 +128,53 @@ export function buildServerModsRowActions(input: ServerModsRowActionInput): RowA
         input.onSetPassive?.(input.row);
       },
     });
+  }
+
+  if (
+    input.mode === "server" &&
+    input.row.id !== null &&
+    input.onMoveLoadOrder !== undefined &&
+    input.loadOrderIds !== undefined
+  ) {
+    const id = input.row.id;
+    const loadOrderIds = input.loadOrderIds;
+    const moveDisabled = (move: ModLoadOrderMove): boolean =>
+      input.busy || !canMoveModIdInLoadOrder(loadOrderIds, id, move);
+    entries.push(
+      { kind: "divider", key: "div-load-order" },
+      {
+        kind: "item",
+        key: "move-top",
+        label: "Move to top",
+        icon: <ArrowLineUp size={ICON} />,
+        disabled: moveDisabled("top"),
+        onClick: () => input.onMoveLoadOrder?.(input.row, "top"),
+      },
+      {
+        kind: "item",
+        key: "move-up",
+        label: "Move up",
+        icon: <ArrowUp size={ICON} />,
+        disabled: moveDisabled("up"),
+        onClick: () => input.onMoveLoadOrder?.(input.row, "up"),
+      },
+      {
+        kind: "item",
+        key: "move-down",
+        label: "Move down",
+        icon: <ArrowDown size={ICON} />,
+        disabled: moveDisabled("down"),
+        onClick: () => input.onMoveLoadOrder?.(input.row, "down"),
+      },
+      {
+        kind: "item",
+        key: "move-bottom",
+        label: "Move to bottom",
+        icon: <ArrowLineDown size={ICON} />,
+        disabled: moveDisabled("bottom"),
+        onClick: () => input.onMoveLoadOrder?.(input.row, "bottom"),
+      },
+    );
   }
 
   if (input.mode === "discover") {

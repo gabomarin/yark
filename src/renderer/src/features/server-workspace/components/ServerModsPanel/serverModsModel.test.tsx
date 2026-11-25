@@ -12,6 +12,8 @@ import {
   mergeMetadata,
   modsMetadataSyncKey,
   pickModListCategory,
+  canMoveModIdInLoadOrder,
+  moveModIdInLoadOrder,
   reorderModIds,
   selectModIdsForCopy,
   shouldApplyDetailRefresh,
@@ -72,6 +74,16 @@ describe("serverModsModel sort/reorder", () => {
     expect(reorderModIds(["1", "2", "3"], 0, 2)).toEqual(["2", "3", "1"]);
     expect(reorderModIds(["1", "2", "3"], 2, 0)).toEqual(["3", "1", "2"]);
     expect(reorderModIds(["1", "2", "3"], 1, 1)).toEqual(["1", "2", "3"]);
+  });
+
+  it("moves a Project ID in load order without drag (#638)", () => {
+    expect(moveModIdInLoadOrder(["1", "2", "3"], "2", "up")).toEqual(["2", "1", "3"]);
+    expect(moveModIdInLoadOrder(["1", "2", "3"], "2", "down")).toEqual(["1", "3", "2"]);
+    expect(moveModIdInLoadOrder(["1", "2", "3"], "3", "top")).toEqual(["3", "1", "2"]);
+    expect(moveModIdInLoadOrder(["1", "2", "3"], "1", "bottom")).toEqual(["2", "3", "1"]);
+    expect(canMoveModIdInLoadOrder(["1", "2", "3"], "1", "up")).toBe(false);
+    expect(canMoveModIdInLoadOrder(["1", "2", "3"], "3", "down")).toBe(false);
+    expect(canMoveModIdInLoadOrder(["1", "2", "3"], "2", "top")).toBe(true);
   });
 });
 

@@ -124,6 +124,35 @@ export function reorderModIds(ids: string[], fromIndex: number, toIndex: number)
   return next;
 }
 
+/** Explicit load-order moves without drag (#638). */
+export type ModLoadOrderMove = "top" | "bottom" | "up" | "down";
+
+export function canMoveModIdInLoadOrder(
+  ids: readonly string[],
+  id: string,
+  move: ModLoadOrderMove,
+): boolean {
+  const from = ids.indexOf(id);
+  if (from < 0) return false;
+  if (move === "top" || move === "up") return from > 0;
+  return from < ids.length - 1;
+}
+
+export function moveModIdInLoadOrder(
+  ids: readonly string[],
+  id: string,
+  move: ModLoadOrderMove,
+): string[] {
+  const from = ids.indexOf(id);
+  if (from < 0) return [...ids];
+  let to: number;
+  if (move === "top") to = 0;
+  else if (move === "bottom") to = ids.length - 1;
+  else if (move === "up") to = Math.max(0, from - 1);
+  else to = Math.min(ids.length - 1, from + 1);
+  return reorderModIds([...ids], from, to);
+}
+
 /** Copy-IDs menu variants (#634 / #635): All / Enabled (`-mods=`) / Disabled / Selected. */
 export type ModIdCopyVariant = "all" | "enabled" | "disabled" | "selected";
 

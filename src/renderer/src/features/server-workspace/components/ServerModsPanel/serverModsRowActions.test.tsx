@@ -94,4 +94,44 @@ describe("buildServerModsRowActions (#702)", () => {
     expect(clear?.disabled).toBe(true);
     expect(clear?.title).toBe(STOP_SERVER_BEFORE_DELETE_MOD_FILES);
   });
+
+  it("offers Move load-order actions when loadOrderIds is provided (#638)", () => {
+    const onMoveLoadOrder = vi.fn();
+    const entries = buildServerModsRowActions({
+      row: { ...baseRow, loadIndex: 1 },
+      mode: "server",
+      busy: false,
+      loadOrderIds: ["a", "947033", "c"],
+      onInspect: vi.fn(),
+      onAdd: vi.fn(),
+      onRemove: vi.fn(),
+      onOpenExternal: vi.fn(),
+      onMoveLoadOrder,
+    });
+    const items = visibleRowActionItems(entries);
+    expect(items.map((item) => item.key)).toEqual(
+      expect.arrayContaining(["move-top", "move-up", "move-down", "move-bottom"]),
+    );
+    expect(items.find((item) => item.key === "move-up")?.disabled).toBe(false);
+    items.find((item) => item.key === "move-up")?.onClick();
+    expect(onMoveLoadOrder).toHaveBeenCalledWith(expect.objectContaining({ id: "947033" }), "up");
+  });
+
+  it("disables Move to top / up for the first load-order row (#638)", () => {
+    const entries = buildServerModsRowActions({
+      row: baseRow,
+      mode: "server",
+      busy: false,
+      loadOrderIds: ["947033", "b"],
+      onInspect: vi.fn(),
+      onAdd: vi.fn(),
+      onRemove: vi.fn(),
+      onOpenExternal: vi.fn(),
+      onMoveLoadOrder: vi.fn(),
+    });
+    const items = visibleRowActionItems(entries);
+    expect(items.find((item) => item.key === "move-top")?.disabled).toBe(true);
+    expect(items.find((item) => item.key === "move-up")?.disabled).toBe(true);
+    expect(items.find((item) => item.key === "move-down")?.disabled).toBe(false);
+  });
 });
