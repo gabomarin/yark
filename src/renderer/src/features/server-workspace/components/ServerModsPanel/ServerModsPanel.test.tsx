@@ -798,7 +798,10 @@ describe("ServerModsPanel", () => {
     expect(await screen.findByText("2 disabled")).toBeInTheDocument();
     await user.click(screen.getByRole("checkbox", { name: "Select mod Awesome Spyglass!" }));
     expect(await screen.findByText("1 selected")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Enable all" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Enable all" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Disable all" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remove all disabled" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "IDs" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Enable" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Copy selected Project IDs" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Remove selected" })).toBeInTheDocument();
@@ -845,6 +848,7 @@ describe("ServerModsPanel", () => {
       );
     });
     expect(screen.queryByText("1 selected")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Enable all" })).toBeInTheDocument();
   });
 
   it("writes one patch per bulk enable/disable/remove-all (#637)", async () => {

@@ -76,11 +76,12 @@ Workspace → **Mods** has two views (`SegmentedControl`):
    While one or more inventory rows are checked, a **selection strip** appears
    above the table (**N selected**, **Enable** / **Disable**, then icon buttons
    for Copy / Remove / Clear with tooltips). Header **Enable all** / **Disable
-   all** / **Remove all disabled** stay as they are — selection does not replace
-   them. Still one patch per enable/disable/remove; drag stays off while the
-   write runs; selection clears on view switch, server switch, successful
-   remove, or when a refresh drops those IDs. The **IDs** menu also offers
-   **Copy selected** (load order) alongside Copy all / enabled / disabled (#635).
+   all** / **Remove all disabled** hide for that moment so only one action row
+   is visible; **IDs** stays. Clearing the selection restores the all-actions.
+   Still one patch per enable/disable/remove; drag stays off while the write
+   runs; selection clears on view switch, server switch, successful remove, or
+   when a refresh drops those IDs. The **IDs** menu also offers **Copy selected**
+   (load order) alongside Copy all / enabled / disabled (#635).
 3. **Toolbar + inventory filters**. With mods on the list, **Add** (compact) and
    **Find** / **Status** share one row — Add left, filters right. Empty inventory
    keeps a prominent Add with the full paste help; compact Add exposes that help
