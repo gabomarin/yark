@@ -1,11 +1,11 @@
 import type { ReactElement, ReactNode } from "react";
-import { Stack, Text } from "@mantine/core";
+import { Group, Stack, Text } from "@mantine/core";
 import { WorkspaceSectionHeader } from "@ui/WorkspaceSectionHeader/WorkspaceSectionHeader";
 
 interface Props {
   activeCount: number;
   disabledCount: number;
-  /** When &gt; 0, shown above the active/disabled line (#635). */
+  /** When &gt; 0, shown on the same status line as active/disabled (#635). */
   selectedCount?: number;
   /** Server-view quick actions (#637); omitted on Discover. */
   actions?: ReactNode;
@@ -23,16 +23,23 @@ export function ServerModsHeader(props: Props): ReactElement {
       title="Mods"
       subtitle="Add a CurseForge Project ID or mod URL here. Discover searches the catalog — it is not the same as pasting an ID."
       actions={
-        <Stack gap={4} align="flex-end">
+        <Stack gap="sm" align="flex-end">
           {props.actions}
-          {selectedCount > 0 && (
-            <Text size="sm" fw={600} lh={1.2} data-mods-selection-count>
-              {selectedCount} selected
+          <Group gap={6} justify="flex-end" wrap="nowrap" data-mods-status-counts>
+            {selectedCount > 0 && (
+              <>
+                <Text size="sm" fw={600} lh={1.2} data-mods-selection-count>
+                  {selectedCount} selected
+                </Text>
+                <Text size="sm" c="dimmed" lh={1.2} aria-hidden>
+                  ·
+                </Text>
+              </>
+            )}
+            <Text size="sm" c="dimmed" lh={1.2}>
+              {statusLine}
             </Text>
-          )}
-          <Text size="sm" c="dimmed" lh={1.2} data-mods-status-counts>
-            {statusLine}
-          </Text>
+          </Group>
         </Stack>
       }
     />
