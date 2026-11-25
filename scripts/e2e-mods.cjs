@@ -256,7 +256,10 @@ async function run() {
     console.log("E2E_MODS_SELECTION_BULK_OK");
 
     // Load-order moves without drag (#638): kebab exposes Move actions.
-    await page.getByRole("button", { name: /More actions /i }).first().click();
+    await page
+      .getByRole("button", { name: /More actions /i })
+      .first()
+      .click();
     await page.getByRole("menuitem", { name: "Move to top", exact: true }).waitFor({ state: "visible", timeout: 5000 });
     await page.getByRole("menuitem", { name: "Move up", exact: true }).waitFor({ state: "visible", timeout: 5000 });
     await page.keyboard.press("Escape");
