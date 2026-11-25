@@ -23,7 +23,7 @@ export function ServerModsHeader(props: Props): ReactElement {
       title="Mods"
       subtitle="Add a CurseForge Project ID or mod URL here. Discover searches the catalog — it is not the same as pasting an ID."
       actions={
-        <Stack gap={2} align="flex-end">
+        <Stack gap={4} align="flex-end">
           {props.actions}
           {selectedCount > 0 && (
             <Text size="sm" fw={600} lh={1.2} data-mods-selection-count>
