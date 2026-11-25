@@ -16,11 +16,7 @@ export function ServerModsViewSortBar(props: Props): ReactElement {
   return (
     <div className={classes.viewSortBar}>
       <Group gap="xs" wrap="wrap">
-        <Button
-          variant="default"
-          leftSection={<ArrowCounterClockwise size={14} />}
-          onClick={props.onClearSort}
-        >
+        <Button variant="default" leftSection={<ArrowCounterClockwise size={14} />} onClick={props.onClearSort}>
           Clear sort
         </Button>
         {props.showApplySortAsLoadOrder ? (

@@ -1,16 +1,5 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  type KeyboardEvent as ReactKeyboardEvent,
-  type RefObject,
-} from "react";
-import {
-  canMoveModIdInLoadOrder,
-  moveModIdInLoadOrder,
-  type ModLoadOrderMove,
-  type ModRow,
-} from "./serverModsModel";
+import { useCallback, useEffect, useRef, type KeyboardEvent as ReactKeyboardEvent, type RefObject } from "react";
+import { canMoveModIdInLoadOrder, moveModIdInLoadOrder, type ModLoadOrderMove, type ModRow } from "./serverModsModel";
 
 /**
  * Explicit load-order moves (context menu + Alt+↑/↓) and focus restore after persist (#638).

@@ -127,22 +127,14 @@ export function reorderModIds(ids: string[], fromIndex: number, toIndex: number)
 /** Explicit load-order moves without drag (#638). */
 export type ModLoadOrderMove = "top" | "bottom" | "up" | "down";
 
-export function canMoveModIdInLoadOrder(
-  ids: readonly string[],
-  id: string,
-  move: ModLoadOrderMove,
-): boolean {
+export function canMoveModIdInLoadOrder(ids: readonly string[], id: string, move: ModLoadOrderMove): boolean {
   const from = ids.indexOf(id);
   if (from < 0) return false;
   if (move === "top" || move === "up") return from > 0;
   return from < ids.length - 1;
 }
 
-export function moveModIdInLoadOrder(
-  ids: readonly string[],
-  id: string,
-  move: ModLoadOrderMove,
-): string[] {
+export function moveModIdInLoadOrder(ids: readonly string[], id: string, move: ModLoadOrderMove): string[] {
   const from = ids.indexOf(id);
   if (from < 0) return [...ids];
   let to: number;
