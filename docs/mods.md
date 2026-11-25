@@ -75,9 +75,9 @@ Workspace → **Mods** has two views (`SegmentedControl`):
    toast, not one per row (#634, #637).
    While one or more inventory rows are checked, the header bulk buttons are
    **replaced in place** by **Enable** / **Disable** and icon buttons for
-   Remove / Clear (tooltips on icons). **N selected** sits on its own line under
-   the header title band. **IDs** stays (including **Copy selected**); Enable
-   all / Disable all / Remove all disabled return when the selection clears.
+   Remove / Clear (tooltips on icons). **N selected** sits under those actions,
+   right-aligned. **IDs** stays (including **Copy selected**); Enable all /
+   Disable all / Remove all disabled return when the selection clears.
    Still one patch per enable/disable/remove; drag stays off while the write
    runs; selection clears on view switch, server switch, successful remove, or
    when a refresh drops those IDs (#635).

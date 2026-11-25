@@ -31,7 +31,7 @@ export function ServerModsServerHeaderActions(props: Props): ReactElement {
   const hasMods = props.configuredIds.length > 0;
   const selectionActive = props.selectedIds.length > 0;
   return (
-    <Group gap={4} wrap="nowrap">
+    <Group gap={4} wrap="nowrap" align="flex-start">
       <ServerModsIdsMenu
         configuredIds={props.configuredIds}
         disabledIds={props.disabledIds}
