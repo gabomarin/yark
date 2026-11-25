@@ -74,11 +74,11 @@ Workspace → **Mods** has two views (`SegmentedControl`):
    or the list is empty. Enabling several Maps mods shows **one** aggregated map
    toast, not one per row (#634, #637).
    While one or more inventory rows are checked, the header bulk buttons are
-   **replaced in place** by **Enable** / **Disable** and icon buttons for
-   Remove / Clear (tooltips on icons). Status counts (**N selected** · active ·
-   disabled) sit on one line under those actions, right-aligned. **IDs** stays
-   (including **Copy selected**); Enable all / Disable all / Remove all
-   disabled return when the selection clears.
+   **replaced in place** by **Enable** / **Disable** / **Remove** (same icons as
+   the all-actions; Remove stays red) and an icon **Clear** selection. Status
+   counts (**N selected** · active · disabled) sit on one line under those
+   actions, right-aligned. **IDs** stays (including **Copy selected**); Enable
+   all / Disable all / Remove all disabled return when the selection clears.
    Still one patch per enable/disable/remove; drag stays off while the write
    runs; selection clears on view switch, server switch, successful remove, or
    when a refresh drops those IDs (#635).

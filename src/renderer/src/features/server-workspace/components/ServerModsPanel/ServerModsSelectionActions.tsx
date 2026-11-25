@@ -16,21 +16,21 @@ interface Props {
 /**
  * Replaces Enable all / Disable all / Remove all disabled in the header while
  * inventory rows are selected (#635). Copy selected stays on the IDs menu.
- * Selection / active / disabled counts live under the header actions row.
+ * Enable / Disable / Remove stay full buttons (Remove keeps red); Clear is icon-only.
  */
 export function ServerModsSelectionActions(props: Props): ReactElement {
   const density = useUiDensity();
   const size = density === "compact" ? "xs" : "sm";
   const iconSize = density === "compact" ? "sm" : "md";
   const hasSelection = props.selectedCount > 0;
-  const iconsDisabled = props.listBusy || !hasSelection;
+  const actionsDisabled = props.listBusy || !hasSelection;
 
   return (
     <Group gap={4} wrap="nowrap" data-mods-selection-actions>
       <Button
         size={size}
         variant="default"
-        disabled={iconsDisabled}
+        disabled={actionsDisabled}
         leftSection={<CheckCircle size={16} />}
         onClick={props.onEnableSelected}
       >
@@ -39,30 +39,28 @@ export function ServerModsSelectionActions(props: Props): ReactElement {
       <Button
         size={size}
         variant="default"
-        disabled={iconsDisabled}
+        disabled={actionsDisabled}
         leftSection={<Prohibit size={16} />}
         onClick={props.onDisableSelected}
       >
         Disable
       </Button>
-      <Tooltip label="Remove selected" withArrow>
-        <ActionIcon
-          variant="subtle"
-          color="red"
-          size={iconSize}
-          aria-label="Remove selected"
-          disabled={iconsDisabled}
-          onClick={() => confirmRemoveSelectedMods(props.selectedCount, props.onRemoveSelected)}
-        >
-          <Trash size={16} />
-        </ActionIcon>
-      </Tooltip>
+      <Button
+        size={size}
+        variant="default"
+        color="red"
+        disabled={actionsDisabled}
+        leftSection={<Trash size={16} />}
+        onClick={() => confirmRemoveSelectedMods(props.selectedCount, props.onRemoveSelected)}
+      >
+        Remove
+      </Button>
       <Tooltip label="Clear selection" withArrow>
         <ActionIcon
           variant="subtle"
           size={iconSize}
           aria-label="Clear selection"
-          disabled={iconsDisabled}
+          disabled={actionsDisabled}
           onClick={props.onClearSelection}
         >
           <X size={16} />

@@ -804,7 +804,7 @@ describe("ServerModsPanel", () => {
     expect(screen.queryByRole("button", { name: "Copy selected Project IDs" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "IDs" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Enable" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Remove selected" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Clear selection" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Enable" }));
@@ -833,7 +833,7 @@ describe("ServerModsPanel", () => {
       );
     });
 
-    await user.click(screen.getByRole("button", { name: "Remove selected" }));
+    await user.click(screen.getByRole("button", { name: "Remove" }));
     const dialog = await screen.findByRole("dialog");
     await user.click(within(dialog).getByRole("button", { name: "Remove selected" }));
     await waitFor(() => {

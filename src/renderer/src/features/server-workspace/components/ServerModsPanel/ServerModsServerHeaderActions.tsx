@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { Button, Group } from "@mantine/core";
+import { CheckCircle, Prohibit, Trash } from "@phosphor-icons/react";
 import { useUiDensity } from "@app/AppProviders";
 import { ServerModsIdsMenu } from "./ServerModsIdsMenu";
 import { ServerModsSelectionActions } from "./ServerModsSelectionActions";
@@ -53,6 +54,7 @@ export function ServerModsServerHeaderActions(props: Props): ReactElement {
             size={size}
             variant="default"
             disabled={props.listBusy || !hasMods || props.disabledCount === 0}
+            leftSection={<CheckCircle size={16} />}
             onClick={props.onEnableAll}
           >
             Enable all
@@ -61,6 +63,7 @@ export function ServerModsServerHeaderActions(props: Props): ReactElement {
             size={size}
             variant="default"
             disabled={props.listBusy || !hasMods || props.disabledCount === props.configuredIds.length}
+            leftSection={<Prohibit size={16} />}
             onClick={props.onDisableAll}
           >
             Disable all
@@ -70,6 +73,7 @@ export function ServerModsServerHeaderActions(props: Props): ReactElement {
             variant="default"
             color="red"
             disabled={props.listBusy || !hasMods || props.disabledCount === 0}
+            leftSection={<Trash size={16} />}
             onClick={() => confirmRemoveDisabledMods(props.disabledCount, props.onRemoveAllDisabled)}
           >
             Remove all disabled
