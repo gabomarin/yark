@@ -27,6 +27,22 @@ const DEFAULT_RECENT_CHANGELOG_LIMIT = 8;
  */
 export const changelog: ChangelogEntry[] = [
   {
+    version: "0.28.0",
+    date: "2026-11-25",
+    sections: [
+      {
+        title: "Highlights",
+        items: [
+          "On Server Mods, select rows and Enable, Disable, or Remove them together. The header shows how many you picked.",
+          "Reorder mods without drag: More actions, right-click, or Alt+↑/↓. Sorted a column? Apply sort as load order makes that the Start order.",
+          "Open a mod’s local folder, or Clear downloaded files so the next Start can fetch them again — from More actions, right-click, or the detail drawer.",
+          "On Discover mods, turn on Hide already added to hide packs you already have on this page. Your search and filters stay when you come back from Server mods.",
+          "If CurseForge has no page for a Project ID yet, Add Project ID still puts it on the list. Check CurseForge again later for the name, and enable it when you are ready to Start.",
+        ],
+      },
+    ],
+  },
+  {
     version: "0.27.0",
     date: "2026-11-15",
     sections: [

@@ -14,9 +14,13 @@ The Workspace **Mods** tab stores CurseForge **Project IDs** per profile.
 - **Disabled** IDs stay on the profile until you turn them back on (no need to delete an ID to skip one boot)
 - **Passive** IDs (row action, row menu, or detail drawer, on an enabled row) load their data with functionality disabled — for cluster transfer / “load data, no spawns”. They are sent only as `-passivemods=id1,id2,…`, never on `-mods=`, and the row shows a **Passive** badge. Disable a passive row and the passive mark is cleared.
 - Newly added IDs start **disabled** — enable them explicitly before they appear on `-mods=`. Add shows a **Mod Added** toast (two can stay visible; a third drops the oldest). Disabled inventory rows are dimmed (thumb + text) while the Enabled switch stays full strength; row **Remove** stays red **subtle**. One CurseForge category sits under the mod name (Maps uses attention color; extra tags as +N with a hover list). The detail drawer can enable, disable, and remove a configured ID, add a Discover result to this server, and shows a Maps launch-token hint (current map unchanged).
-- **IDs** copies All, Enabled, or Disabled Project IDs in load order. Paste that list into **Add** — commas, spaces, or new lines all work. A row menu can copy one Project ID or its CurseForge URL.
+- **IDs** copies All, Enabled, Disabled, or **selected** Project IDs in load order. Paste that list into **Add** — commas, spaces, or new lines all work. A row menu can copy one Project ID or its CurseForge URL.
 - With mods on the list, **Add** shares the toolbar with **Find** and **Status** (Enabled, Disabled, or Passive). Filters only hide rows. Load order does not change, and drag stays off until you clear the filter.
-- **Discover** browses CurseForge on open: category filter, in-field search (icon / Enter), pagination, and catalog sort from table headers (Name / Downloads / Updated), with Clear sort back to Popularity. The table scrolls in the panel with a fixed pagination footer. If the category list cannot load yet, Discover still works with a soft failure.
+- Check one or more rows to replace **Enable all** / **Disable all** / **Remove all disabled** with **Enable** / **Disable** / **Remove** for the selection (same icons; Remove stays red), plus **Clear**. Counts show **N selected** · active · disabled under those actions.
+- Reorder without drag: row **More actions** (and right-click) offer **Move to top / up / down / bottom**; **Alt+↑/↓** moves a focused row; **Apply sort as load order** writes the current column sort into load order when no filter is hiding rows.
+- **Open local folder** and **Clear downloaded files** (More actions kebab, context menu, and detail drawer) work on that mod’s ASA folders. Clear deletes them after confirm so the next Start can fetch again; both stay off while the server is running or no folders exist.
+- When CurseForge has no usable page for a numeric Project ID, **Add Project ID** keeps the row without metadata until **Check CurseForge again**. Start still loads it once you enable it.
+- **Discover** browses CurseForge on open: category filter, in-field search (icon / Enter), pagination, catalog sort from table headers (Name / Downloads / Updated), Clear sort back to Popularity, and **Hide already added** (off by default) to filter configured rows on the current page. Search / category / sort / page survive switching back from Server mods. The table scrolls in the panel with a fixed pagination footer. If the category list cannot load yet, Discover still works with a soft failure.
 - Names / summaries / links come from a small Cloudflare Worker proxy and are cached locally
 - The detail drawer can show a CurseForge **screenshot carousel** and a clamped plain-text **description** when inspect fetches get-by-id metadata
 
@@ -81,5 +85,7 @@ map pack enabled on Mods.
 5. For map packs, confirm both **enabled on Mods** and the correct **Map** token before Start — a
    passive map pack is omitted from `-mods=`, so Mods shows a warning until you mark it active again
 6. Row actions and right-click menus share the same Menu chrome as the icon buttons — use either path
+7. Use **Hide already added** on Discover when you only want new packs on the current page
+8. Prefer **Clear downloaded files** over Remove when you want ASA to refetch the same Project ID on the next Start
 
 Discover is the supported CurseForge browse surface on this tab (beyond typing Project IDs or URLs).

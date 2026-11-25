@@ -120,6 +120,15 @@ async function openModsTab(page) {
   });
 }
 
+/** Mantine SegmentedControl radios are visually hidden — click the label text. */
+async function clickModsView(page, label) {
+  const target =
+    label === "Discover mods"
+      ? page.getByText("Discover mods", { exact: true })
+      : page.getByText(/^Server mods/);
+  await target.first().click({ timeout: 10000 });
+}
+
 async function clickModSwitch(page, ariaPrefix) {
   const switchInput = page.getByRole("switch", { name: new RegExp(`^${ariaPrefix} `, "i") }).first();
   await switchInput.waitFor({ state: "attached", timeout: 10000 });
@@ -187,13 +196,18 @@ async function run() {
       throw new Error(`Mod ${DEMO_MOD_ID} did not appear after Add mod (Worker/network?). ${error?.message ?? error}`);
     }
 
-    // Row local-files actions (#702): icons visible; disabled until ASA folders exist.
-    const openLocal = page.getByRole("button", { name: /^Open local folder /i }).first();
-    const clearLocal = page.getByRole("button", { name: /^Clear downloaded files /i }).first();
+    // Row local-files actions (#702): kebab menuitems; disabled until ASA folders exist.
+    await page
+      .getByRole("button", { name: /More actions /i })
+      .first()
+      .click();
+    const openLocal = page.getByRole("menuitem", { name: "Open local folder", exact: true });
+    const clearLocal = page.getByRole("menuitem", { name: "Clear downloaded files", exact: true });
     await openLocal.waitFor({ state: "visible", timeout: 10000 });
     await clearLocal.waitFor({ state: "visible", timeout: 10000 });
     assert.equal(await openLocal.isDisabled(), true, "Open local folder should stay off without ASA folders");
     assert.equal(await clearLocal.isDisabled(), true, "Clear downloaded files should stay off without ASA folders");
+    await page.keyboard.press("Escape");
     console.log("E2E_MODS_LOCAL_FILE_ACTIONS_DISABLED_WITHOUT_FILES");
 
     // Enable/disable: assert the control exists, toggle both ways, assert final states.
@@ -266,12 +280,13 @@ async function run() {
     console.log("E2E_MODS_REORDER_MENU_OK");
 
     // Discover polish (#639): Hide already added filters this page; view state survives Server ↔ Discover.
-    await page.getByRole("radio", { name: "Discover mods" }).click();
+    await clickModsView(page, "Discover mods");
     const hideAdded = page.getByRole("checkbox", { name: "Hide already added" });
     await hideAdded.waitFor({ state: "visible", timeout: 10000 });
     assert.equal(await hideAdded.isChecked(), false, "Hide already added defaults off");
-    const discoverSearch = page.getByRole("textbox", { name: "Search" });
-    await discoverSearch.fill(DEMO_MOD_ID);
+    const discoverSearch = page.getByRole("textbox", { name: "Search", exact: true });
+    // CurseForge search matches names, not raw Project IDs — use a known token for DEMO_MOD_ID.
+    await discoverSearch.fill("spyglass");
     await page.getByRole("button", { name: "Search mods" }).click();
     // Configured rows expose "Already added …" (name, not Project ID) in Discover.
     const alreadyAdded = page.getByRole("button", { name: /^Already added /i });
@@ -280,12 +295,12 @@ async function run() {
     await alreadyAdded.first().waitFor({ state: "detached", timeout: 10000 });
     await hideAdded.uncheck();
     await alreadyAdded.first().waitFor({ state: "visible", timeout: 10000 });
-    await discoverSearch.fill("spyglass");
-    await page.getByRole("radio", { name: /Server mods/i }).click();
-    await page.getByRole("radio", { name: "Discover mods" }).click();
-    assert.equal(await discoverSearch.inputValue(), "spyglass", "Discover search survives Server ↔ Discover");
+    await discoverSearch.fill("structures");
+    await clickModsView(page, "Server mods");
+    await clickModsView(page, "Discover mods");
+    assert.equal(await discoverSearch.inputValue(), "structures", "Discover search survives Server ↔ Discover");
     console.log("E2E_MODS_DISCOVER_POLISH_OK");
-    await page.getByRole("radio", { name: /Server mods/i }).click();
+    await clickModsView(page, "Server mods");
 
     // Header quick actions (#637): one patch each, from the current switch state.
     const hasDisabledMod = (await page.getByRole("switch", { name: /^Enable /i }).count()) > 0;
@@ -296,8 +311,15 @@ async function run() {
     await page.getByRole("button", { name: "Disable all", exact: true }).click();
     await waitForModSwitchChecked(page, "Enable", false);
     await page.getByRole("button", { name: "Remove all disabled", exact: true }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "Remove all disabled", exact: true }).click();
-    await page.locator("[data-mod-row]", { hasText: DEMO_MOD_ID }).waitFor({ state: "detached", timeout: 15000 });
+    const removeDisabledDialog = page.getByRole("dialog", { name: /Remove all disabled mods/i });
+    await removeDisabledDialog.waitFor({ state: "visible", timeout: 5000 });
+    await removeDisabledDialog.getByRole("button", { name: "Remove all disabled", exact: true }).click();
+    // Discover stays mounted (hidden) with catalog rows — assert Server empty state, not raw data-mod-row.
+    // EmptyState title is Text (not a heading) by default.
+    await page.getByText("No mods configured for this server", { exact: true }).waitFor({
+      state: "visible",
+      timeout: 15000,
+    });
 
     await leaveWorkspaceToServers(page, 10000);
     await removeServerIfPresent(page, serverName);
