@@ -1054,6 +1054,7 @@ describe("ServerModsPanel", () => {
     await user.click(screen.getByRole("checkbox", { name: "Hide already added" }));
     expect(screen.queryByText("Awesome Spyglass!")).not.toBeInTheDocument();
     expect(screen.getByText("Super Spyglass Plus")).toBeInTheDocument();
+    expect(screen.getByText(/already added hidden on this page · catalog pages unchanged/i)).toBeInTheDocument();
     expect(vi.mocked(api.searchMods).mock.calls.length).toBe(searchCalls);
   });
 

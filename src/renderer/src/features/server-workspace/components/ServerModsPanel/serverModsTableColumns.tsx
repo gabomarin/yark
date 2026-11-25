@@ -159,7 +159,7 @@ export function buildServerModsTableColumns(input: {
       accessor: "actions",
       title: "",
       // Discover: Add + View + CurseForge. Server: View + kebab + Remove (#638 / #639).
-      width: input.mode === "discover" ? 96 : 96,
+      width: 96,
       textAlign: "right",
       cellsClassName: classes.actionsCell,
       render: (row): ReactElement => (

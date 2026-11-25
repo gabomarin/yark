@@ -146,6 +146,24 @@ export function ServerModsDiscoverSection(props: Props): ReactElement {
   const pageCount = Math.max(1, Math.ceil(totalCount / DISCOVER_PAGE_SIZE));
   const showPagination = hasLoadedOnce && totalCount > DISCOVER_PAGE_SIZE;
   const hiddenConfiguredCount = hideAlreadyAdded ? catalogRows.length - rows.length : 0;
+  // Hide already added is client-side on the current CurseForge page only —
+  // pagination still walks the full catalog (#639).
+  const resultSummary =
+    hasLoadedOnce && totalCount > 0
+      ? [
+          `${totalCount.toLocaleString()} mods${committedQuery.length > 0 ? ` matching “${committedQuery}”` : ""}`,
+          hideAlreadyAdded
+            ? `${hiddenConfiguredCount} already added hidden on this page · catalog pages unchanged`
+            : null,
+        ]
+          .filter((part): part is string => part !== null)
+          .join(" · ")
+      : null;
+  const emptyCopy = discoverEmptyCopy({
+    hasLoadedOnce,
+    hideAlreadyAdded,
+    catalogRowCount: catalogRows.length,
+  });
 
   return (
     <div className={classes.sectionLayout}>
@@ -168,11 +186,9 @@ export function ServerModsDiscoverSection(props: Props): ReactElement {
           }}
           onHideAlreadyAddedChange={setHideAlreadyAdded}
         />
-        {hasLoadedOnce && totalCount > 0 ? (
+        {resultSummary !== null ? (
           <Text size="sm" c="dimmed">
-            {totalCount.toLocaleString()} mods
-            {committedQuery.length > 0 ? ` matching “${committedQuery}”` : ""}
-            {hiddenConfiguredCount > 0 ? ` · ${hiddenConfiguredCount} already added hidden on this page` : ""}
+            {resultSummary}
           </Text>
         ) : null}
       </div>
@@ -183,20 +199,8 @@ export function ServerModsDiscoverSection(props: Props): ReactElement {
           <EmptyState
             layout="stacked"
             icon={<MagnifyingGlass size={24} />}
-            title={
-              hasLoadedOnce && hideAlreadyAdded && catalogRows.length > 0
-                ? "Every mod on this page is already added"
-                : hasLoadedOnce
-                  ? "No mods match these filters"
-                  : "Browse the CurseForge catalog"
-            }
-            description={
-              hasLoadedOnce && hideAlreadyAdded && catalogRows.length > 0
-                ? "Turn off Hide already added, or go to another page."
-                : hasLoadedOnce
-                  ? "Try another search or category."
-                  : "Popular ASA mods load here. Use the search icon or Enter for a text query."
-            }
+            title={emptyCopy.title}
+            description={emptyCopy.description}
           />
         ) : (
           <ServerModsTable
@@ -234,6 +238,28 @@ export function ServerModsDiscoverSection(props: Props): ReactElement {
       ) : null}
     </div>
   );
+}
+
+function discoverEmptyCopy(input: { hasLoadedOnce: boolean; hideAlreadyAdded: boolean; catalogRowCount: number }): {
+  title: string;
+  description: string;
+} {
+  if (input.hasLoadedOnce && input.hideAlreadyAdded && input.catalogRowCount > 0) {
+    return {
+      title: "Every mod on this page is already added",
+      description: "Turn off Hide already added, or go to another catalog page.",
+    };
+  }
+  if (input.hasLoadedOnce) {
+    return {
+      title: "No mods match these filters",
+      description: "Try another search or category.",
+    };
+  }
+  return {
+    title: "Browse the CurseForge catalog",
+    description: "Popular ASA mods load here. Use the search icon or Enter for a text query.",
+  };
 }
 
 function byDisplayIndex(left: ModCategory, right: ModCategory): number {

@@ -198,6 +198,8 @@ export function ServerModsPanel(props: Props): ReactElement {
     if (mod === undefined) return;
     void activateCatalogMod({
       mod,
+      serverId: props.server.id,
+      getActiveServerId: () => serverRef.current.id,
       setBusyKey,
       setError,
       setWarning,

@@ -146,7 +146,9 @@ Workspace → **Mods** has two views (`SegmentedControl`):
    each click re-queries CurseForge for the full result set, not only the page.
    **Clear sort** restores Popularity descending (default browse).
 5. **Hide already added** (checkbox, off by default) filters configured rows out
-   of the current page without a re-query (#639). Turning it off shows them again.
+   of the **current CurseForge page** without a re-query (#639). Pagination still
+   walks the full catalog; a page can look sparse or empty when every result on
+   it is already configured. Turning the checkbox off shows them again.
 6. Add resolves the row through `mods:get-by-reference`, then persists. New IDs
    start disabled (same toast as Add by URL).
 7. Switching Server ↔ Discover keeps the last Discover query / category / sort /

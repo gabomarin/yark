@@ -265,12 +265,21 @@ async function run() {
     await page.keyboard.press("Escape");
     console.log("E2E_MODS_REORDER_MENU_OK");
 
-    // Discover polish (#639): Hide already added checkbox; view state survives Server ↔ Discover.
+    // Discover polish (#639): Hide already added filters this page; view state survives Server ↔ Discover.
     await page.getByRole("radio", { name: "Discover mods" }).click();
     const hideAdded = page.getByRole("checkbox", { name: "Hide already added" });
     await hideAdded.waitFor({ state: "visible", timeout: 10000 });
     assert.equal(await hideAdded.isChecked(), false, "Hide already added defaults off");
     const discoverSearch = page.getByRole("textbox", { name: "Search" });
+    await discoverSearch.fill(DEMO_MOD_ID);
+    await page.getByRole("button", { name: "Search mods" }).click();
+    // Configured rows expose "Already added …" (name, not Project ID) in Discover.
+    const alreadyAdded = page.getByRole("button", { name: /^Already added /i });
+    await alreadyAdded.first().waitFor({ state: "visible", timeout: 30000 });
+    await hideAdded.check();
+    await alreadyAdded.first().waitFor({ state: "detached", timeout: 10000 });
+    await hideAdded.uncheck();
+    await alreadyAdded.first().waitFor({ state: "visible", timeout: 10000 });
     await discoverSearch.fill("spyglass");
     await page.getByRole("radio", { name: /Server mods/i }).click();
     await page.getByRole("radio", { name: "Discover mods" }).click();
