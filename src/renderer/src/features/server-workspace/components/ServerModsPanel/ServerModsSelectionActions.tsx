@@ -64,7 +64,7 @@ export function ServerModsSelectionActions(props: Props): ReactElement {
         </Tooltip>
         <Tooltip label="Remove selected" withArrow>
           <ActionIcon
-            variant="default"
+            variant="subtle"
             color="red"
             size={iconSize}
             aria-label="Remove selected"
