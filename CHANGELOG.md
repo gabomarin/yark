@@ -9,6 +9,10 @@ How to bump versions and cut releases: see [docs/versioning.md](docs/versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Dependencies: Mantine and mantine-datatable **9.8**, Electron **43.8.13**, React **19.3**, plus electron-builder/updater and tooling patches (knip, Playwright, Prettier, TypeScript-ESLint).
+
 ## [0.28.0] - 2026-11-25
 
 ### Changed

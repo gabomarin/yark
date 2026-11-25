@@ -129,9 +129,9 @@ describe("OverviewPage", () => {
     expect(screen.getByText("Scorched Earth")).toBeInTheDocument();
     expect(screen.queryByText("Advertencias")).not.toBeInTheDocument();
 
-    const nextSection = header?.nextElementSibling as HTMLElement | null;
-    expect(nextSection).not.toBeNull();
-    expect(within(nextSection as HTMLElement).getByRole("region", { name: "Server list" })).toBeInTheDocument();
+    // Do not walk header.nextElementSibling — ModalsProvider may inject a Modal
+    // root sibling under Mantine 9.8+.
+    expect(screen.getByRole("region", { name: "Server list" })).toBeInTheDocument();
   });
 
   it("turns Check Servers Health into a loading control while scanning", () => {

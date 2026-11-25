@@ -67,7 +67,9 @@ describe("BackupHistoryTable", () => {
       </AppProviders>,
     );
 
-    expect(screen.getByRole("button", { name: /File/i })).toBeTruthy();
+    // mantine-datatable 9.8: File header is sortable th + "Filter File" ActionIcon.
+    expect(document.querySelector('th[data-accessor="path"]')).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Filter File" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: /^Map$/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /^Status$/i })).toBeNull();
     expect(screen.queryByRole("button", { name: /^Type$/i })).toBeNull();

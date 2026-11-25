@@ -88,7 +88,9 @@ export function AppProviders({
           defaultProps: { transitionProps: { duration: 0 } },
         },
         Tooltip: {
-          defaultProps: { transitionProps: { duration: 0 } },
+          // Mantine 9.7+: hideDetached defaults on; jsdom zero-size rects hide every
+          // tooltip in Vitest unless env="test" or hideDetached={false}.
+          defaultProps: { transitionProps: { duration: 0 }, hideDetached: false },
         },
         Select: {
           defaultProps: {
@@ -154,6 +156,7 @@ export function AppProviders({
             theme={theme}
             cssVariablesResolver={cssVariablesResolver}
             forceColorScheme={appearance.colorScheme}
+            {...(isRendererTest() ? { env: "test" as const } : {})}
           >
             <DatesProvider settings={{ consistentWeeks: true }}>
               <ModalsProvider
